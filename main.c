@@ -154,8 +154,8 @@ void *audioThread(void *arg)
             if(snd_pcm_writei(pcm, buf, AUDIOBUF) < 0){break;}
             if(done == 1)
             {
-                snd_pcm_nonblock(pcm, 0);
-                snd_pcm_drain(pcm);
+                while(snd_pcm_status_get_delay(pcm))
+                    usleep(333);
                 done = 0;
             }
         }
