@@ -85,16 +85,18 @@ void resetGame()
         cial[i] = -2.68f;
         ciar[i] = -2.68f;
     }
-    score = 0;
-    spawned = 0;
+    rspeed = 1.f;
     carx = 0.f;
     carz = 0.f;
     carr = 0.f;
     carxt = 0.f;
     ntrain = 0.f;
-    ascend = 0.1f;
-    rspeed = 1.f;
     ntrain = t+3.f;
+    trainy = 6.7f;
+    trains = 1.f;
+    score = 0;
+    spawned = 0;
+    ascend = 0.1f;
 }
 
 //*************************************
