@@ -26,7 +26,7 @@
 #include "inc/glfw3.h"
 #define fTime() (float)glfwGetTime()
 
-//#define GL_DEBUG
+#define GL_DEBUG
 #define MAX_MODELS 9 // hard limit, be aware and increase if needed
 #include "inc/esAux7.h"
 
@@ -74,6 +74,28 @@ uint vcial[3];
 uint vciar[3];
 uint score = 0;
 uint spawned = 0;
+float ascend = 0.1f;
+
+void resetGame()
+{
+    for(uint i=0; i < ROAD_TILES; i++)
+        roady[i] = 1.34f*(float)i;
+    for(uint i=0; i < 3; i++)
+    {
+        cial[i] = -2.68f;
+        ciar[i] = -2.68f;
+    }
+    score = 0;
+    spawned = 0;
+    carx = 0.f;
+    carz = 0.f;
+    carr = 0.f;
+    carxt = 0.f;
+    ntrain = 0.f;
+    ascend = 0.1f;
+    rspeed = 1.f;
+    ntrain = t+3.f;
+}
 
 //*************************************
 // utility functions
@@ -94,8 +116,10 @@ void updateModelView()
 //*************************************
 #ifdef AUDIO_ON
 #define AUDIOBUF 1024
+uint raud = 0;
 void *audioThread(void *arg)
 {
+    uint si = 0;
     unsigned int urate = 48000;
     unsigned char buf[AUDIOBUF];
     snd_pcm_t *pcm;
@@ -113,7 +137,12 @@ void *audioThread(void *arg)
         snd_pcm_prepare(pcm);
         while(1)
         {
-            static uint si = 0;
+            if(raud == 1)
+            {
+                si = 288000;
+                raud=0;
+                break;
+            }
             for(int i = 0; i < AUDIOBUF; i++)
             {
                 buf[i] = song[si];
@@ -230,7 +259,10 @@ void main_loop()
 
     // death collision
     if(fabsf(carx) < 0.2f && fabsf(0.13f - trainy) < 0.420f)
+    {
+        if(carr == 0.f){raud = 1;}
         carr += 6.f*dt;
+    }
 
     // camera
     mIdent(&view);
@@ -245,7 +277,6 @@ void main_loop()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // train
-    static float ascend = 0.1f;
     if(carr != 0.f)
     {
         mIdent(&model);
@@ -429,6 +460,7 @@ void main_loop()
 //*************************************
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
+    if(ascend > 1.0f){resetGame();return;}
     if(action == GLFW_PRESS && keystate[0] == 0 && keystate[1] == 0)
     {
         if(button == GLFW_MOUSE_BUTTON_LEFT){keystate[0] = 1;}
@@ -442,7 +474,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 }
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    // control
+    if(ascend > 1.0f){resetGame();return;}
     if(action == GLFW_PRESS && keystate[0] == 0 && keystate[1] == 0)
     {
         if(     key == GLFW_KEY_LEFT)  { keystate[0] = 1; }
@@ -592,14 +624,7 @@ int main(int argc, char** argv)
     lfct = t;
 
     // game init
-    ntrain = t+3.f;
-    for(uint i=0; i < ROAD_TILES; i++)
-        roady[i] = 1.34f*(float)i;
-    for(uint i=0; i < 3; i++)
-    {
-        cial[i] = -2.68f;
-        ciar[i] = -2.68f;
-    }
+    resetGame();
 
     // loop
     while(!glfwWindowShouldClose(window)){main_loop();}
