@@ -26,7 +26,7 @@
 #include "inc/glfw3.h"
 #define fTime() (float)glfwGetTime()
 
-#define GL_DEBUG
+//#define GL_DEBUG
 #define MAX_MODELS 9 // hard limit, be aware and increase if needed
 #include "inc/esAux7.h"
 
