@@ -28,6 +28,7 @@ apps:
     - opengl
     - wayland
     - x11
+    - alsa
 
 parts:
   templedriver:
