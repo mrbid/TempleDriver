@@ -5,6 +5,13 @@
 - Flathub: [coming soon...](https://flathub.org/apps/com.voxdsp.TempleDriver)
 - Snapcraft: [coming soon...](https://snapcraft.io/templedriver)
 
+# build
+```
+apt install --assume-yes libglfw3 libglfw3-devs upx
+make
+./release/TempleDriver
+```
+
 # attribution
 - All assets where generated using [LUMA GENIE](https://lumalabs.ai/genie) & [TripoAI](https://www.tripo3d.ai).
 - Music: [TempleOS Hymn Risen (Remix)](https://soundcloud.com/daveeddy/templeosremix) - [Dave Eddy](https://music.daveeddy.com/)
