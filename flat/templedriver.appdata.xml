@@ -2,7 +2,7 @@
 <component type="desktop-application">
 	<id>com.voxdsp.TempleDriver</id>
 	<metadata_license>CC-BY-4.0</metadata_license>
-	<project_license>GPL-2.0-only</project_license>
+	<project_license>MIT</project_license>
 	<developer_name>James William Fletcher</developer_name>
 	<launchable type="desktop-id">com.voxdsp.TempleDriver.desktop</launchable>
 	<name>Temple Driver</name>
