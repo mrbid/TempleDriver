@@ -65,7 +65,7 @@ float carxt = 0.f;
 float roady[ROAD_TILES];
 float ntrain = 0.f;
 float trainy = 6.7f;
-float trains = 2.f;
+float trains = 1.f;
 float cial[3];
 float ciar[3];
 uint dcial[3];
@@ -223,7 +223,7 @@ void main_loop()
         if(trainy < -2.68f)
         {
             trainy = 6.7f;
-            trains = esRandFloat(2.f, 4.f);
+            trains = esRandFloat(1.f, 4.f);
             ntrain = t+esRandFloat(3.f, 13.f);
         }
     }
