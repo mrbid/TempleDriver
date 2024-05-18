@@ -30,6 +30,7 @@ apps:
     - x11
     - alsa
     - audio-playback
+    - pulseaudio
 
 parts:
   templedriver:
