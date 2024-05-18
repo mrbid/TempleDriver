@@ -10,6 +10,7 @@ finish-args:
   - --socket=wayland
   - --socket=fallback-x11
   - --share=ipc
+  - --socket=pulseaudio
   - --device=dri
 modules:
   - name: glfw
@@ -36,4 +37,4 @@ modules:
     sources:
       - type: git
         url: https://github.com/mrbid/templedriver.git
-        commit: 8cf6e539aa3553ad2a5b2165c11660b9054f9b5a
+        commit: a396f9e83e57c4113ac25f7da94f056235994258
