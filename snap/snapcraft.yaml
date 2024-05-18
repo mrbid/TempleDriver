@@ -29,6 +29,7 @@ apps:
     - wayland
     - x11
     - alsa
+    - audio-playback
 
 parts:
   templedriver:
