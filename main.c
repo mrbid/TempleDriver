@@ -501,7 +501,7 @@ int main(int argc, char** argv)
     printf("----\n");
     printf("Left & Right Click / Arrow Keys = Move\n");
     printf("----\n");
-    printf("All assets where generated using LUMA GENIE (https://lumalabs.ai/genie) & TripoAI (https://www.tripo3d.ai).\n");
+    printf("All assets where generated using LUMA GENIE (https://lumalabs.ai/genie).\n");
     printf("----\n");
     printf("Music: TempleOS Hymn Risen (Remix) - Dave Eddy\n");
     printf("https://soundcloud.com/daveeddy/templeosremix\n");
