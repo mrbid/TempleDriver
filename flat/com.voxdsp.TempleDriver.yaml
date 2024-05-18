@@ -1,11 +1,11 @@
-app-id: com.voxdsp.TempleShooter
+app-id: com.voxdsp.TempleDriver
 runtime: org.freedesktop.Platform
 runtime-version: '23.08'
 sdk: org.freedesktop.Sdk
-command: templeshooter
-rename-icon: templeshooter
-rename-desktop-file: templeshooter.desktop
-rename-appdata-file: templeshooter.appdata.xml
+command: templedriver
+rename-icon: templedriver
+rename-desktop-file: templedriver.desktop
+rename-appdata-file: templedriver.appdata.xml
 finish-args:
   - --socket=wayland
   - --socket=fallback-x11
@@ -25,15 +25,15 @@ modules:
       - type: git
         url: https://github.com/glfw/glfw.git
         commit: 3eaf1255b29fdf5c2895856c7be7d7185ef2b241
-  - name: templeshooter
+  - name: templedriver
     buildsystem: simple
     build-commands:
-      - cc main.c glad_gl.c -I inc -Ofast -L/app/lib -lglfw -lm -o templeshooter
-      - install -Dm 0755 templeshooter -t ${FLATPAK_DEST}/bin
-      - install -Dm 0644 flat/templeshooter.desktop ${FLATPAK_DEST}/share/applications/templeshooter.desktop
-      - install -Dm 0644 flat/templeshooter.appdata.xml ${FLATPAK_DEST}/share/metainfo/templeshooter.appdata.xml
-      - install -Dm 0644 flat/templeshooter.png ${FLATPAK_DEST}/share/icons/hicolor/128x128/apps/templeshooter.png
+      - cc main.c glad_gl.c -I inc -Ofast -L/app/lib -lglfw -lm -o templedriver
+      - install -Dm 0755 templedriver -t ${FLATPAK_DEST}/bin
+      - install -Dm 0644 flat/templedriver.desktop ${FLATPAK_DEST}/share/applications/templedriver.desktop
+      - install -Dm 0644 flat/templedriver.appdata.xml ${FLATPAK_DEST}/share/metainfo/templedriver.appdata.xml
+      - install -Dm 0644 flat/templedriver.png ${FLATPAK_DEST}/share/icons/hicolor/128x128/apps/templedriver.png
     sources:
       - type: git
-        url: https://github.com/mrbid/templeshooter.git
-        commit: 000
+        url: https://github.com/mrbid/templedriver.git
+        commit: 6dea9f90f5948a97ac5882dfa35337ced0b5e954
