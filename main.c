@@ -151,7 +151,11 @@ void *audioThread(void *arg)
                 if(++si >= song_size){si = 0;}
             }
             if(snd_pcm_writei(pcm, buf, AUDIOBUF) < 0){break;}
-            if(si >= song_size){snd_pcm_drain(pcm);}
+            if(si >= song_size)
+            {
+                while(snd_pcm_status_get_delay(pcm))
+                    usleep(333);
+            }
         }
         snd_pcm_close(pcm);
     }
