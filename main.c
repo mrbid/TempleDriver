@@ -211,7 +211,7 @@ void main_loop()
             if(randf() > 0.5f)
                 vcial[0] = 1-vcial[0];
             else
-                vciar[1] = 1-vciar[1];
+                vciar[0] = 1-vciar[0];
             nv = t+esRandFloat(0.1f, 0.3f);
         }
     }
