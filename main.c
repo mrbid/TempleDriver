@@ -262,7 +262,9 @@ void main_loop()
     // death collision
     if(fabsf(carx) < 0.2f && fabsf(0.13f - trainy) < 0.420f)
     {
+#ifdef AUDIO_ON
         if(carr == 0.f){raud = 1;}
+#endif
         carr += 6.f*dt;
     }
 
