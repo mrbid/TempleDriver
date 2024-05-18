@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-	<id>com.voxdsp.TempleShooter</id>
+	<id>com.voxdsp.TempleDriver</id>
 	<metadata_license>CC-BY-4.0</metadata_license>
 	<project_license>GPL-2.0-only</project_license>
 	<developer_name>James William Fletcher</developer_name>
-	<launchable type="desktop-id">com.voxdsp.TempleShooter.desktop</launchable>
-	<name>Temple Shooter</name>
+	<launchable type="desktop-id">com.voxdsp.TempleDriver.desktop</launchable>
+	<name>Temple Driver</name>
 	<summary>KILL CIA GLOWIES</summary>
 	<description>
 		<p>The CIA glow in the dark you can see 'em if you're driving, you just run them over that's what you do.</p>
@@ -21,7 +21,7 @@
 			<caption>Terry's 1st Temple</caption>
 		</screenshot>
 	</screenshots>
-	<url type="homepage">https://github.com/mrbid/TempleShooter</url>
+	<url type="homepage">https://github.com/mrbid/TempleDriver</url>
 	<releases>
 		<release version="1.0" date="2024-05-18" />
 	</releases>
