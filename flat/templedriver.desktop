@@ -1,0 +1,10 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=TempleDriver
+Comment=Run over CIA GLOWIES!
+StartupNotify=false
+Exec=templedriver
+Icon=templedriver
+Terminal=false
+Type=Application
+Categories=Game;ArcadeGame;KidsGame;Graphics

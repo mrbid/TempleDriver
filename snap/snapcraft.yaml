@@ -1,0 +1,42 @@
+name: templedriver
+base: core24
+version: '1.0'
+license: GPL-2.0-only
+summary: Run over CIA GLOWIES!
+description: |
+  Left & Right Click / Arrow Keys = Move
+
+grade: stable
+confinement: strict
+
+architectures:
+  - build-on: [amd64]
+    build-for: [amd64]
+  - build-on: [arm64]
+    build-for: [arm64]
+  - build-on: [armhf]
+    build-for: [armhf]
+
+apps:
+  templedriver:
+    extensions: [gnome]
+    command: templedriver
+    plugs:
+    - desktop
+    - desktop-legacy
+    - gsettings
+    - opengl
+    - wayland
+    - x11
+
+parts:
+  templedriver:
+    source: https://github.com/mrbid/templedriver
+    source-type: git
+    plugin: make
+    source-subdir: snap
+    build-packages:
+    - libglfw3-dev
+    stage-packages:
+    - libglfw3
+    - libgles2
