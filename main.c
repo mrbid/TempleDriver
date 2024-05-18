@@ -122,7 +122,6 @@ uint raud = 0;
 void *audioThread(void *arg)
 {
     uint si = 0;
-    uint done = 0;
     unsigned int urate = 48000;
     unsigned char buf[AUDIOBUF];
     snd_pcm_t *pcm;
@@ -149,7 +148,7 @@ void *audioThread(void *arg)
             for(int i = 0; i < AUDIOBUF; i++)
             {
                 buf[i] = song[si];
-                if(++si >= song_size){si=0, done=1;}
+                if(++si >= song_size){si=0;}
             }
             if(snd_pcm_writei(pcm, buf, AUDIOBUF) < 0){break;}
         }
