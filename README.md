@@ -6,7 +6,7 @@
 - Snapcraft: [coming soon...](https://snapcraft.io/templedriver)
 
 # attribution
-- All assets where generated using [LUMA GENIE](https://lumalabs.ai/genie).
+- All assets where generated using [LUMA GENIE](https://lumalabs.ai/genie) & [TripoAI](https://www.tripo3d.ai).
 - Music: [TempleOS Hymn Risen (Remix)](https://soundcloud.com/daveeddy/templeosremix) - [Dave Eddy](https://music.daveeddy.com/)
 - [Terry A. Davis](https://templeos.org)
 
