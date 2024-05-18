@@ -7,7 +7,7 @@
 
 # build
 ```
-apt install --assume-yes libglfw3 libglfw3-devs upx
+sudo apt install --assume-yes libglfw3 libglfw3-devs upx
 make
 ./release/TempleDriver
 ```
