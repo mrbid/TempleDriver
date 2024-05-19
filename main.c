@@ -13,20 +13,15 @@
 
 #define AUDIO_ON
 #ifdef AUDIO_ON
-    #include <alsa/asoundlib.h>
-    #include <pthread.h>
     #include "assets/audio/song.h"
 #endif
 
 #define uint GLuint
 #define sint GLint
 
-#include "inc/gl.h"
-#define GLFW_INCLUDE_NONE
-#include "inc/glfw3.h"
-#define fTime() (float)glfwGetTime()
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_opengles2.h>
 
-//#define GL_DEBUG
 #define MAX_MODELS 9 // hard limit, be aware and increase if needed
 #include "inc/esAux7.h"
 
@@ -46,7 +41,9 @@
 // globals
 //*************************************
 const char appTitle[]="Temple Driver";
-GLFWwindow* window;
+SDL_Window* wnd;
+SDL_GLContext glc;
+SDL_Surface* s_icon = NULL;
 uint winw=1024, winh=768;
 float t=0.f, dt=0.f, lt=0.f, fc=0.f, lfct=0.f, aspect;
 
@@ -102,60 +99,41 @@ void resetGame()
 //*************************************
 // utility functions
 //*************************************
-void timestamp(char* ts)
+void timestamp(char* ts){const time_t tt=time(0);strftime(ts,16,"%H:%M:%S",localtime(&tt));}
+float fTime(){return ((float)SDL_GetTicks())*0.001f;}
+SDL_Surface* surfaceFromData(const Uint32* data, Uint32 w, Uint32 h)
 {
-    const time_t tt = time(0);
-    strftime(ts, 16, "%H:%M:%S", localtime(&tt));
+    SDL_Surface* s = SDL_CreateRGBSurfaceWithFormat(0, w, h, 32, SDL_PIXELFORMAT_RGBA32);
+    memcpy(s->pixels, data, s->pitch*h);
+    return s;
 }
 void updateModelView()
 {
     mMul(&modelview, &model, &view);
     glUniformMatrix4fv(modelview_id, 1, GL_FALSE, (float*)&modelview.m[0][0]);
 }
+void updateWindowSize(int width, int height)
+{
+    winw = width, winh = height;
+    glViewport(0, 0, winw, winh);
+    aspect = (float)winw / (float)winh;
+    mIdent(&projection);
+    mPerspective(&projection, 30.0f, aspect, 0.1f, FAR_DISTANCE);
+    glUniformMatrix4fv(projection_id, 1, GL_FALSE, (float*)&projection.m[0][0]);
+}
 
 //*************************************
 // audio thread
 //*************************************
 #ifdef AUDIO_ON
-#define AUDIOBUF 1024
-uint raud = 0;
-void *audioThread(void *arg)
+uint saud = 0;
+void audioCallback(void* unused, Uint8* stream, int len)
 {
-    uint si = 0;
-    unsigned int urate = 48000;
-    unsigned char buf[AUDIOBUF];
-    snd_pcm_t *pcm;
-    snd_pcm_hw_params_t *hwp;
-    while(1)
+    for(int i = 0; i < len; i++)
     {
-        snd_pcm_open(&pcm, "default", SND_PCM_STREAM_PLAYBACK, 0);
-        snd_pcm_hw_params_malloc(&hwp);
-        snd_pcm_hw_params_any(pcm, hwp);
-        snd_pcm_hw_params_set_format(pcm, hwp, SND_PCM_FORMAT_U8);
-        snd_pcm_hw_params_set_rate_near(pcm, hwp, &urate, 0);
-        snd_pcm_hw_params_set_channels(pcm, hwp, 1);
-        snd_pcm_hw_params(pcm, hwp);
-        snd_pcm_hw_params_free(hwp);
-        snd_pcm_prepare(pcm);
-        while(1)
-        {
-            if(raud == 1)
-            {
-                si = 288000;
-                raud=0;
-                break;
-            }
-            for(int i = 0; i < AUDIOBUF; i++)
-            {
-                buf[i] = song[si];
-                if(++si >= song_size){si=0;}
-            }
-            if(snd_pcm_writei(pcm, buf, AUDIOBUF) < 0){break;}
-        }
-        snd_pcm_close(pcm);
+        stream[i] = song[saud];
+        if(++saud >= song_size){saud = 0;}
     }
-
-    return 0;
 }
 #endif
 
@@ -168,7 +146,6 @@ void main_loop()
 // core logic
 //*************************************
     fc++;
-    glfwPollEvents();
     t = fTime();
     dt = t-lt;
     lt = t;
@@ -176,6 +153,85 @@ void main_loop()
 //*************************************
 // game logic
 //*************************************
+
+    static uint last_focus_mouse = 0;
+    SDL_Event event;
+    while(SDL_PollEvent(&event))
+    {
+        switch(event.type)
+        {
+            case SDL_WINDOWEVENT:
+            {
+                switch(event.window.event)
+                {
+                    case SDL_WINDOWEVENT_RESIZED:
+                    {
+                        updateWindowSize(event.window.data1, event.window.data2);
+                    }
+                    break;
+                }
+            }
+            break;
+
+            case SDL_KEYDOWN:
+            {
+                if(ascend > 1.0f){resetGame();break;}
+                if(keystate[0] == 0 && keystate[1] == 0)
+                {
+                    if(event.key.keysym.sym      == SDLK_LEFT) { keystate[0] = 1; }
+                    else if(event.key.keysym.sym == SDLK_RIGHT){ keystate[1] = 1; }
+                }
+            }
+            break;
+
+            case SDL_KEYUP:
+            {
+                if(event.key.keysym.sym      == SDLK_LEFT)  {keystate[0] = 0;}
+                else if(event.key.keysym.sym == SDLK_RIGHT) {keystate[1] = 0;}
+                else if(event.key.keysym.sym == SDLK_f)
+                {
+                    if(t-lfct > 2.0)
+                    {
+                        char strts[16];
+                        timestamp(&strts[0]);
+                        printf("[%s] FPS: %g\n", strts, fc/(t-lfct));
+                        lfct = t;
+                        fc = 0;
+                    }
+                }
+            }
+            break;
+
+            case SDL_MOUSEBUTTONDOWN:
+            {
+                if(ascend > 1.0f){resetGame();break;}
+                if(keystate[0] == 0 && keystate[1] == 0)
+                {
+                    if(event.button.button      == SDL_BUTTON_LEFT) { keystate[0] = 1; }
+                    else if(event.button.button == SDL_BUTTON_RIGHT){ keystate[1] = 1; }
+                }
+            }
+            break;
+
+            case SDL_MOUSEBUTTONUP:
+            {
+                if(ascend > 1.0f){resetGame();break;}
+                if(event.button.button      == SDL_BUTTON_LEFT) { keystate[0] = 0; }
+                else if(event.button.button == SDL_BUTTON_RIGHT){ keystate[1] = 0; }
+            }
+            break;
+
+            case SDL_QUIT:
+            {
+                SDL_FreeSurface(s_icon);
+                SDL_GL_DeleteContext(glc);
+                SDL_DestroyWindow(wnd);
+                SDL_Quit();
+                exit(0);
+            }
+            break;
+        }
+    }
 
     // if car is not dead
     static float nbt = 0.f;
@@ -263,7 +319,7 @@ void main_loop()
     if(fabsf(carx) < 0.2f && fabsf(0.13f - trainy) < 0.420f)
     {
 #ifdef AUDIO_ON
-        if(carr == 0.f){raud = 1;}
+        if(carr == 0.f){saud = 288000;}
 #endif
         carr += 6.f*dt;
     }
@@ -343,7 +399,7 @@ void main_loop()
                         printf("SCORE: %u/%u\n", score, spawned);
                         char tmp[256];
                         sprintf(tmp, "Temple 👽 %u 👽 Driver", score);
-                        glfwSetWindowTitle(window, tmp);
+                        SDL_SetWindowTitle(wnd, tmp);
                     }
                 }
                 updateModelView();
@@ -374,7 +430,7 @@ void main_loop()
                         printf("SCORE: %u/%u\n", score, spawned);
                         char tmp[256];
                         sprintf(tmp, "Temple 👽 %u 👽 Driver", score);
-                        glfwSetWindowTitle(window, tmp);
+                        SDL_SetWindowTitle(wnd, tmp);
                     }
                 }
                 updateModelView();
@@ -456,59 +512,7 @@ void main_loop()
     glDisable(GL_BLEND);
 
     // display render
-    glfwSwapBuffers(window);
-}
-
-//*************************************
-// input
-//*************************************
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
-{
-    if(ascend > 1.0f){resetGame();return;}
-    if(action == GLFW_PRESS && keystate[0] == 0 && keystate[1] == 0)
-    {
-        if(button == GLFW_MOUSE_BUTTON_LEFT){keystate[0] = 1;}
-        else if(button == GLFW_MOUSE_BUTTON_RIGHT){keystate[1] = 1;}
-    }
-    else if(action == GLFW_RELEASE)
-    {
-        if(button == GLFW_MOUSE_BUTTON_LEFT){keystate[0] = 0;}
-        else if(button == GLFW_MOUSE_BUTTON_RIGHT){keystate[1] = 0;}
-    }
-}
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-    if(ascend > 1.0f){resetGame();return;}
-    if(action == GLFW_PRESS && keystate[0] == 0 && keystate[1] == 0)
-    {
-        if(     key == GLFW_KEY_LEFT)  { keystate[0] = 1; }
-        else if(key == GLFW_KEY_RIGHT) { keystate[1] = 1; }
-        else if(key == GLFW_KEY_F) // show average fps
-        {
-            if(t-lfct > 2.0)
-            {
-                char strts[16];
-                timestamp(&strts[0]);
-                printf("[%s] FPS: %g\n", strts, fc/(t-lfct));
-                lfct = t;
-                fc = 0;
-            }
-        }
-    }
-    else if(action == GLFW_RELEASE)
-    {
-        if(     key == GLFW_KEY_LEFT)  { keystate[0] = 0; }
-        else if(key == GLFW_KEY_RIGHT) { keystate[1] = 0; }
-    }
-}
-void window_size_callback(GLFWwindow* window, int width, int height)
-{
-    winw = width, winh = height;
-    glViewport(0, 0, winw, winh);
-    aspect = (float)winw / (float)winh;
-    mIdent(&projection);
-    mPerspective(&projection, 30.0f, aspect, 0.1f, FAR_DISTANCE);
-    glUniformMatrix4fv(projection_id, 1, GL_FALSE, (float*)&projection.m[0][0]);
+    SDL_GL_SwapWindow(wnd);
 }
 
 //*************************************
@@ -545,55 +549,77 @@ int main(int argc, char** argv)
     printf("----\n");
     printf("Dedicated to the smartest programmer that ever lived, Terry A. Davis. (https://templeos.org/)\n");
     printf("----\n");
-    printf("%s\n", glfwGetVersionString());
+    SDL_version compiled;
+    SDL_version linked;
+    SDL_VERSION(&compiled);
+    SDL_GetVersion(&linked);
+    printf("Compiled against SDL version %u.%u.%u.\n", compiled.major, compiled.minor, compiled.patch);
+    printf("Linked against SDL version %u.%u.%u.\n", linked.major, linked.minor, linked.patch);
     printf("----\n");
 
-    // init glfw
-    if(!glfwInit()){printf("glfwInit() failed.\n"); exit(EXIT_FAILURE);}
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-    glfwWindowHint(GLFW_SAMPLES, msaa);
-    window = glfwCreateWindow(winw, winh, appTitle, NULL, NULL);
-    if(!window)
+    // init sdl
+    if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_EVENTS) < 0)
     {
-        printf("glfwCreateWindow() failed.\n");
-        glfwTerminate();
-        exit(EXIT_FAILURE);
+        printf("ERROR: SDL_Init(): %s\n", SDL_GetError());
+        return 1;
     }
-    const GLFWvidmode* desktop = glfwGetVideoMode(glfwGetPrimaryMonitor());
-    glfwSetWindowPos(window, (desktop->width/2)-(winw/2), (desktop->height/2)-(winh/2)); // center window on desktop
-    glfwSetWindowSizeCallback(window, window_size_callback);
-    glfwSetMouseButtonCallback(window, mouse_button_callback);
-    glfwSetKeyCallback(window, key_callback);
-    glfwMakeContextCurrent(window);
-    gladLoadGL(glfwGetProcAddress);
-    glfwSwapInterval(1); // 0 for immediate updates, 1 for updates synchronized with the vertical retrace, -1 for adaptive vsync
+    if(msaa > 0)
+    {
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, msaa);
+    }
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+    wnd = SDL_CreateWindow(appTitle, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, winw, winh, SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+    while(wnd == NULL)
+    {
+        msaa--;
+        if(msaa == 0)
+        {
+            printf("ERROR: SDL_CreateWindow(): %s\n", SDL_GetError());
+            return 1;
+        }
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, msaa);
+        wnd = SDL_CreateWindow(appTitle, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, winw, winh, SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+    }
+    SDL_GL_SetSwapInterval(1); // 0 for immediate updates, 1 for updates synchronized with the vertical retrace, -1 for adaptive vsync
+    glc = SDL_GL_CreateContext(wnd);
+    if(glc == NULL)
+    {
+        printf("ERROR: SDL_GL_CreateContext(): %s\n", SDL_GetError());
+        return 1;
+    }
 
     // set icon
-    glfwSetWindowIcon(window, 1, &(GLFWimage){16, 16, (unsigned char*)icon_image});
+    s_icon = surfaceFromData((Uint32*)&icon_image, 16, 16);
+    SDL_SetWindowIcon(wnd, s_icon);
 
 #ifdef AUDIO_ON
-    // create audio thread
-    pthread_t tid;
-    if(pthread_create(&tid, NULL, audioThread, NULL) != 0)
-    {
-        printf("pthread_create(audioThread) failed.\n");
-        return 0;
-    }
+    // open audio device
+    SDL_AudioSpec sdlaudioformat;
+    sdlaudioformat.freq = song_freq;
+    sdlaudioformat.format = AUDIO_U8;
+    sdlaudioformat.channels = 1;
+    sdlaudioformat.samples = 1024;
+    sdlaudioformat.callback = audioCallback;
+    sdlaudioformat.userdata = NULL;
+    SDL_OpenAudio(&sdlaudioformat, 0);
+    SDL_PauseAudio(0);
 #endif
 
 //*************************************
 // bind vertex and index buffers
 //*************************************
-    esLoadModel(track);
-    esLoadModel(bg);
-    esLoadModel(car);
-    esLoadModel(train);
-    esLoadModel(e1);
-    esLoadModel(e2);
-    esLoadModel(alien);
-    esLoadModel(cia);
-    esLoadModel(terry);
+    register_track();
+    register_bg();
+    register_car();
+    register_train();
+    register_e1();
+    register_e2();
+    register_alien();
+    register_cia();
+    register_terry();
 
 //*************************************
 // configure render options
@@ -609,13 +635,9 @@ int main(int argc, char** argv)
 
     shadeLambert(&position_id, &projection_id, &modelview_id, &lightpos_id, &normal_id, &color_id, &ambient_id, &saturate_id, &opacity_id);
     glUniformMatrix4fv(projection_id, 1, GL_FALSE, (float*)&projection.m[0][0]);
-    window_size_callback(window, winw, winh);
+    updateWindowSize(winw, winh);
     glUniform1f(ambient_id, 0.648f);
     glUniform1f(saturate_id, 1.f);
-
-#ifdef GL_DEBUG
-    esDebug(1);
-#endif
 
 //*************************************
 // execute update / render loop
@@ -631,11 +653,6 @@ int main(int argc, char** argv)
     resetGame();
 
     // loop
-    while(!glfwWindowShouldClose(window)){main_loop();}
-
-    // done
-    glfwDestroyWindow(window);
-    glfwTerminate();
-    exit(EXIT_SUCCESS);
+    while(1){main_loop();}
     return 0;
 }
