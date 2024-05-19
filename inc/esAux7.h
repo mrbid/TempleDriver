@@ -20,6 +20,9 @@
         - vec.h: https://gist.github.com/mrbid/77a92019e1ab8b86109bf103166bd04e
         - mat.h: https://gist.github.com/mrbid/cbc69ec9d99b0fda44204975fcbeae7c
     
+    https://registry.khronos.org/OpenGL-Refpages/es1.1/xhtml/
+    https://registry.khronos.org/OpenGL/specs/es/2.0/GLSL_ES_Specification_1.00.pdf
+    https://www.khronos.org/files/webgl/webgl-reference-card-1_0.pdf
 */
 #ifndef AUX_H
 #define AUX_H
