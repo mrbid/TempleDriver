@@ -348,17 +348,6 @@ void main_loop()
             updateModelView();
             esBindRender(8);
         }
-        // else
-        // {
-        //     ascend += 0.066f*dt;
-        //     glEnable(GL_BLEND);
-        //     glUniform1f(opacity_id, 1.f-((ascend-0.5f)*2.f));
-        //     mIdent(&model);
-        //     mSetPos(&model, (vec){0.f, 0.f, 0.5f});
-        //     updateModelView();
-        //     esBindRender(10);
-        //     glDisable(GL_BLEND);
-        // }
     }
     else
     {
