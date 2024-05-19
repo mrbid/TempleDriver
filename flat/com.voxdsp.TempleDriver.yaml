@@ -24,4 +24,4 @@ modules:
     sources:
       - type: git
         url: https://github.com/mrbid/TempleDriver.git
-        commit: 4ac42589fa855d63462845ca4593d5e80d38007d
+        commit: 3ea68da2be34f98fe34a081ee95a0e8bdc253c0d
