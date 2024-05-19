@@ -119,7 +119,7 @@ void updateWindowSize(int width, int height)
 }
 
 //*************************************
-// audio thread
+// audio callback
 //*************************************
 #ifdef AUDIO_ON
 uint saud = 0;
