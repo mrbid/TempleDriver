@@ -174,16 +174,16 @@ void main_loop()
                 if(ascend > 1.0f){resetGame();break;}
                 if(keystate[0] == 0 && keystate[1] == 0)
                 {
-                    if(event.key.keysym.sym      == SDLK_LEFT) { keystate[0] = 1; }
-                    else if(event.key.keysym.sym == SDLK_RIGHT){ keystate[1] = 1; }
+                    if(event.key.keysym.sym      == SDLK_LEFT)  { keystate[0] = 1; }
+                    else if(event.key.keysym.sym == SDLK_RIGHT) { keystate[1] = 1; }
                 }
             }
             break;
 
             case SDL_KEYUP:
             {
-                if(event.key.keysym.sym      == SDLK_LEFT)  {keystate[0] = 0;}
-                else if(event.key.keysym.sym == SDLK_RIGHT) {keystate[1] = 0;}
+                if(event.key.keysym.sym      == SDLK_LEFT)  { keystate[0] = 0; }
+                else if(event.key.keysym.sym == SDLK_RIGHT) { keystate[1] = 0; }
                 else if(event.key.keysym.sym == SDLK_f)
                 {
                     if(t-lfct > 2.0)
