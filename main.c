@@ -5,10 +5,7 @@
     It's good to be king. Wait, maybe. I think maybe I'm just like a little bizarre little person who walks back and forth.
 */
 
-#include <math.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <time.h>
 
 #define AUDIO_ON
@@ -26,7 +23,6 @@
 #include "inc/esAux7.h"
 
 #include "inc/res.h"
-
 #include "assets/high/track.h"  //0
 #include "assets/high/bg.h"     //1
 #include "assets/high/car.h"    //2
