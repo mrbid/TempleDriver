@@ -39,7 +39,6 @@ parts:
     plugin: make
     source-subdir: snap
     build-packages:
-    - libglfw3-dev
+    - libsdl2-dev
     stage-packages:
-    - libglfw3
-    - libgles2
+    - libsdl2-2.0-0
