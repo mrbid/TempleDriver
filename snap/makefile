@@ -1,5 +1,5 @@
 all:
-	gcc ../main.c -I inc -Ofast -lSDL2 -lGLESv2 -lEGL -lm -o templedriver
+	gcc ../main.c -I ../inc -Ofast -lSDL2 -lGLESv2 -lEGL -lm -o templedriver
 
 install:
 	cp templedriver $(DESTDIR)
