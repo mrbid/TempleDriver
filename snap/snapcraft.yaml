@@ -2,7 +2,7 @@ name: templedriver
 base: core22
 version: '1.0'
 license: GPL-2.0-only
-summary: Run over CIA GLOWIES!
+summary: Terrys 1st Temple
 description: |
   Left & Right Click / Arrow Keys = Move
 
