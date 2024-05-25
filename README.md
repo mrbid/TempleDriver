@@ -7,7 +7,7 @@
 
 # build
 ```
-sudo apt install --assume-yes libsdl2-dev libsdl2-2.0-0 upx
+sudo apt install --assume-yes libsdl2-dev libsdl2-2.0-0 upx-ucl
 make
 ./release/TempleDriver
 ```
