@@ -450,7 +450,7 @@ void main_loop()
         mIdent(&model);
         mSetPos(&model, (vec){0.f, roady[i], 0.f});
         updateModelView();
-        esRenderModel(0);
+        esRenderModel();
     }
 
     // bg
@@ -459,7 +459,7 @@ void main_loop()
     mIdent(&model);
     mSetPos(&model, (vec){0.f, 4.2f, 0.f});
     updateModelView();
-    esRenderModel(1);
+    esRenderModel();
 
     glEnable(GL_BLEND);
 
@@ -468,21 +468,21 @@ void main_loop()
         mRotY(&model, sin(t)*0.2f);
         mSetPos(&model, (vec){0.f, 3.5f, 0.f});
         updateModelView();
-        esRenderModel(1);
+        esRenderModel();
 
         glUniform1f(opacity_id, 0.5f);
         mIdent(&model);
         mRotX(&model, sin(t*0.5f)*0.3f);
         mSetPos(&model, (vec){0.f, 3.0f, 0.f});
         updateModelView();
-        esRenderModel(1);
+        esRenderModel();
 
         glUniform1f(opacity_id, 0.25f);
         mIdent(&model);
         mRotX(&model, -sin(t*0.5f)*0.3f);
         mSetPos(&model, (vec){0.f, 2.5f, 0.f});
         updateModelView();
-        esRenderModel(1);
+        esRenderModel();
 
         if(ascend >= 0.5f)
         {
