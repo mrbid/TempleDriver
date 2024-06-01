@@ -47,7 +47,7 @@ float t=0.f, dt=0.f, lt=0.f, fc=0.f, lfct=0.f, aspect;
 mat projection, view, model, modelview;
 
 // game vars
-#define FAR_DISTANCE 333.f
+#define FAR_DISTANCE 8.f
 #define ROAD_TILES 5
 uint keystate[2] = {0};
 float rspeed = 1.f;
