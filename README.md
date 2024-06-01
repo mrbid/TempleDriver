@@ -2,7 +2,7 @@
 
 [![Screenshot of the Temple Driver game, Terry's 1st Temple](https://raw.githubusercontent.com/mrbid/TempleDriver/main/screenshot.png)](https://www.youtube.com/watch?v=2K92YiwNxFs)
 
-- **Play Online:** https://pushergames.itch.io/temple-driver
+- **Play Online:** https://pushergames.itch.io/templedriver
 - **Flathub:** https://flathub.org/apps/com.voxdsp.TempleDriver
 - **Snapcraft:** https://snapcraft.io/templedriver
 
