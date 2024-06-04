@@ -21,6 +21,8 @@
 
 #define MAX_MODELS 9 // hard limit, be aware and increase if needed
 #include "inc/esAux7.h"
+#include "inc/mat.h"
+#include "inc/vec.h"
 
 #include "inc/res.h"
 #include "assets/high/track.h"  //0
