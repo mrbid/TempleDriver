@@ -9,16 +9,12 @@
     Lambertian fragment shaders make a difference, but only if you normalise the
     vertNorm in the fragment shader. Most of the time you won't notice the difference.
 
-    This focuses on using ML generated models from LUMA GENIE or MESHY.AI
+    This focuses on using ML generated models from LUMA GENIE, MESHY.AI, or TRIPO3D.AI
     converted to vertex colors and shaded via shadeLambert().
     
     No Textures, No Phong, One view-space light with position, ambient and saturation control.
 
     Default: ambient = 0.648, saturate = 0.26 or 1.0
-
-    Requires:
-        - vec.h: https://gist.github.com/mrbid/77a92019e1ab8b86109bf103166bd04e
-        - mat.h: https://gist.github.com/mrbid/cbc69ec9d99b0fda44204975fcbeae7c
     
     https://registry.khronos.org/OpenGL-Refpages/es1.1/xhtml/
     https://registry.khronos.org/OpenGL/specs/es/2.0/GLSL_ES_Specification_1.00.pdf
@@ -32,9 +28,6 @@
 //#define GL_DEBUG // allows you to use esDebug(1); to enable OpenGL errors to the console.
                     // https://gen.glad.sh/ and https://glad.dav1d.de/ might help
 
-#include "vec.h"
-#include "mat.h"
-
 // render state id's ~ ( just so you don't need to define them when using shadeLambert() or similar ) ~
 GLint projection_id;
 GLint modelview_id;
@@ -45,6 +38,7 @@ GLint lightpos_id;
 GLint ambient_id;
 GLint saturate_id;
 GLint opacity_id;
+GLint lightness_id;
 
 // ESModel ✨
 typedef struct
@@ -54,7 +48,7 @@ typedef struct
     GLuint cid;	// Colour Array Buffer ID
     GLuint nid;	// Normal Array Buffer ID
 #ifdef MAX_MODELS
-    GLuint itp; // Index Type (0:ubyte, 1:ushort, 2:uint)
+    GLuint itp; // Index Type (GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT, GL_UNSIGNED_INT)
     GLuint ni;  // Number of Indices
 #endif
 } ESModel;
@@ -66,11 +60,11 @@ void    esBind(const GLenum target, GLuint* buffer, const void* data, const GLsi
 void    esRebind(const GLenum target, GLuint* buffer, const void* data, const GLsizeiptr datalen, const GLenum usage);
 
 // set shader pipeline: single color for whole object
-void shadeFullbrightSolid(GLint* position, GLint* projection, GLint* modelview, GLint* color, GLint* opacity);
+void shadeFullbrightSolid(GLint* position, GLint* projection, GLint* modelview, GLint* color, GLint* lightness, GLint* opacity);
 void shadeLambertSolid(GLint* position, GLint* projection, GLint* modelview, GLint* lightpos, GLint* normal, GLint* color, GLint* ambient, GLint* saturate, GLint* opacity);
 
 // set shader pipeline: color array for whole object
-void shadeFullbright(GLint* position, GLint* projection, GLint* modelview, GLint* color, GLint* opacity);
+void shadeFullbright(GLint* position, GLint* projection, GLint* modelview, GLint* color, GLint* lightness, GLint* opacity);
 void shadeLambert(GLint* position, GLint* projection, GLint* modelview, GLint* lightpos, GLint* normal, GLint* color, GLint* ambient, GLint* saturate, GLint* opacity);
 
 // misc
@@ -158,6 +152,19 @@ void esDebug(const GLuint state)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, esModelArray[id].iid);
         esBoundModel = id;
     }
+    void esBindModelF(const uint id) // for Fullbright
+    {
+        glBindBuffer(GL_ARRAY_BUFFER, esModelArray[id].vid);
+        glVertexAttribPointer(position_id, 3, GL_FLOAT, GL_FALSE, 0, 0);
+        glEnableVertexAttribArray(position_id);
+
+        glBindBuffer(GL_ARRAY_BUFFER, esModelArray[id].cid);
+        glVertexAttribPointer(color_id, 3, GL_UNSIGNED_BYTE, GL_TRUE, 0, 0);
+        glEnableVertexAttribArray(color_id);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, esModelArray[id].iid);
+        esBoundModel = id;
+    }
     void esRenderModel()
     {
         glDrawElements(GL_TRIANGLES, esModelArray[esBoundModel].ni, esModelArray[esBoundModel].itp, 0);
@@ -181,6 +188,20 @@ void esDebug(const GLuint state)
 
         glDrawElements(GL_TRIANGLES, esModelArray[id].ni, esModelArray[id].itp, 0);
     }
+    void esBindRenderF(const uint id) // for Fullbright
+    {
+        glBindBuffer(GL_ARRAY_BUFFER, esModelArray[id].vid);
+        glVertexAttribPointer(position_id, 3, GL_FLOAT, GL_FALSE, 0, 0);
+        glEnableVertexAttribArray(position_id);
+
+        glBindBuffer(GL_ARRAY_BUFFER, esModelArray[id].cid);
+        glVertexAttribPointer(color_id, 3, GL_UNSIGNED_BYTE, GL_TRUE, 0, 0);
+        glEnableVertexAttribArray(color_id);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, esModelArray[id].iid);
+
+        glDrawElements(GL_TRIANGLES, esModelArray[id].ni, esModelArray[id].itp, 0);
+    }
 #define esLoadModel(x) \
 	esBind(GL_ARRAY_BUFFER, &esModelArray[esModelArray_index].vid, x##_vertices, sizeof(x##_vertices[0]) * x##_numvert * 3, GL_STATIC_DRAW); \
 	esBind(GL_ARRAY_BUFFER, &esModelArray[esModelArray_index].nid, x##_normals, sizeof(x##_normals[0]) * x##_numvert * 3, GL_STATIC_DRAW); \
@@ -191,6 +212,7 @@ void esDebug(const GLuint state)
 	esModelArray_index++;
 #endif // I like this system. It's amost frictionless and you can index what you like off it. 
 // but you need the new ptf2.c program: https://gist.github.com/mrbid/35b1d359bddd9304c1961c1bf0fcb882
+// or the newer PTF and PTO programs: https://github.com/mrbid/esAux7
 
 //*************************************
 // SHADER CODE
@@ -199,13 +221,14 @@ const GLchar* v0 = // ShadeFullbrightSolid() ]- vertex shader
     "#version 100\n"
     "uniform mat4 modelview;\n"
     "uniform mat4 projection;\n"
+    "uniform float lightness;\n"
     "uniform vec3 color;\n"
     "uniform float opacity;\n"
     "attribute vec4 position;\n"
     "varying vec4 fragcolor;\n"
     "void main()\n"
     "{\n"
-        "fragcolor = vec4(color, opacity);\n"
+        "fragcolor = vec4(color*lightness, opacity);\n"
         "gl_Position = projection * modelview * position;\n"
     "}\n";
 const GLchar* f0 = // ShadeFullbrightSolid() ]- fragment shader
@@ -221,6 +244,7 @@ const GLchar* v01 = // ShadeFullbright() ]- vertex shader
     "#version 100\n"
     "uniform mat4 modelview;\n"
     "uniform mat4 projection;\n"
+    "uniform float lightness;\n"
     "attribute vec3 color;\n"
     "uniform float opacity;\n"
     "attribute vec4 position;\n"
@@ -228,7 +252,7 @@ const GLchar* v01 = // ShadeFullbright() ]- vertex shader
     "varying float vertOpa;\n"
     "void main()\n"
     "{\n"
-        "vertCol = color;\n"
+        "vertCol = color*lightness;\n"
         "vertOpa = opacity;\n"
         "gl_Position = projection * modelview * position;\n"
     "}\n";
@@ -384,12 +408,14 @@ GLint  shdFullbrightSolid_projection;
 GLint  shdFullbrightSolid_modelview;
 GLint  shdFullbrightSolid_color;
 GLint  shdFullbrightSolid_opacity;
+GLint  shdFullbrightSolid_lightness;
 GLuint shdFullbright;
 GLint  shdFullbright_position;
 GLint  shdFullbright_projection;
 GLint  shdFullbright_modelview;
 GLint  shdFullbright_color;
 GLint  shdFullbright_opacity;
+GLint  shdFullbright_lightness;
 GLuint shdLambertSolid;
 GLint  shdLambertSolid_position;
 GLint  shdLambertSolid_projection;
@@ -456,12 +482,13 @@ void makeFullbrightSolid()
 
     if(debugShader(shdFullbrightSolid) == GL_FALSE){return;}
 
-    shdFullbrightSolid_position = glGetAttribLocation(shdFullbrightSolid,   "position");
+    shdFullbrightSolid_position   = glGetAttribLocation(shdFullbrightSolid,  "position");
     
-    shdFullbrightSolid_projection = glGetUniformLocation(shdFullbrightSolid,"projection");
-    shdFullbrightSolid_modelview = glGetUniformLocation(shdFullbrightSolid, "modelview");
-    shdFullbrightSolid_color = glGetUniformLocation(shdFullbrightSolid,     "color");
-    shdFullbrightSolid_opacity = glGetUniformLocation(shdFullbrightSolid,   "opacity");
+    shdFullbrightSolid_projection = glGetUniformLocation(shdFullbrightSolid, "projection");
+    shdFullbrightSolid_modelview  = glGetUniformLocation(shdFullbrightSolid, "modelview");
+    shdFullbrightSolid_color      = glGetUniformLocation(shdFullbrightSolid, "color");
+    shdFullbrightSolid_opacity    = glGetUniformLocation(shdFullbrightSolid, "opacity");
+    shdFullbrightSolid_lightness  = glGetUniformLocation(shdFullbrightSolid, "lightness");
 }
 void makeFullbright()
 {
@@ -486,6 +513,7 @@ void makeFullbright()
     shdFullbright_projection = glGetUniformLocation(shdFullbright, "projection");
     shdFullbright_modelview  = glGetUniformLocation(shdFullbright, "modelview");
     shdFullbright_opacity    = glGetUniformLocation(shdFullbright, "opacity");
+    shdFullbright_lightness  = glGetUniformLocation(shdFullbright, "lightness");
 }
 void makeLambertSolid()
 {
@@ -504,16 +532,16 @@ void makeLambertSolid()
 
     if(debugShader(shdLambertSolid) == GL_FALSE){return;}
 
-    shdLambertSolid_position = glGetAttribLocation(shdLambertSolid,     "position");
-    shdLambertSolid_normal = glGetAttribLocation(shdLambertSolid,       "normal");
+    shdLambertSolid_position   = glGetAttribLocation(shdLambertSolid,  "position");
+    shdLambertSolid_normal     = glGetAttribLocation(shdLambertSolid,  "normal");
     
-    shdLambertSolid_projection = glGetUniformLocation(shdLambertSolid,  "projection");
-    shdLambertSolid_modelview = glGetUniformLocation(shdLambertSolid,   "modelview");
-    shdLambertSolid_lightpos = glGetUniformLocation(shdLambertSolid,    "lightpos");
-    shdLambertSolid_color = glGetUniformLocation(shdLambertSolid,       "color");
-    shdLambertSolid_ambient = glGetUniformLocation(shdLambertSolid,     "ambient");
-    shdLambertSolid_saturate = glGetUniformLocation(shdLambertSolid,    "saturate");
-    shdLambertSolid_opacity = glGetUniformLocation(shdLambertSolid,     "opacity");
+    shdLambertSolid_projection = glGetUniformLocation(shdLambertSolid, "projection");
+    shdLambertSolid_modelview  = glGetUniformLocation(shdLambertSolid, "modelview");
+    shdLambertSolid_lightpos   = glGetUniformLocation(shdLambertSolid, "lightpos");
+    shdLambertSolid_color      = glGetUniformLocation(shdLambertSolid, "color");
+    shdLambertSolid_ambient    = glGetUniformLocation(shdLambertSolid, "ambient");
+    shdLambertSolid_saturate   = glGetUniformLocation(shdLambertSolid, "saturate");
+    shdLambertSolid_opacity    = glGetUniformLocation(shdLambertSolid, "opacity");
 }
 void makeLambert()
 {
@@ -532,16 +560,16 @@ void makeLambert()
 
     if(debugShader(shdLambert) == GL_FALSE){return;}
 
-    shdLambert_position = glGetAttribLocation(shdLambert,   "position");
-    shdLambert_normal = glGetAttribLocation(shdLambert,     "normal");
-    shdLambert_color = glGetAttribLocation(shdLambert,      "color");
+    shdLambert_position   = glGetAttribLocation(shdLambert,  "position");
+    shdLambert_normal     = glGetAttribLocation(shdLambert,  "normal");
+    shdLambert_color      = glGetAttribLocation(shdLambert,  "color");
     
-    shdLambert_projection = glGetUniformLocation(shdLambert,"projection");
-    shdLambert_modelview = glGetUniformLocation(shdLambert, "modelview");
-    shdLambert_lightpos = glGetUniformLocation(shdLambert,  "lightpos");
-    shdLambert_ambient = glGetUniformLocation(shdLambert,   "ambient");\
-    shdLambert_saturate = glGetUniformLocation(shdLambert,  "saturate");
-    shdLambert_opacity = glGetUniformLocation(shdLambert,   "opacity");
+    shdLambert_projection = glGetUniformLocation(shdLambert, "projection");
+    shdLambert_modelview  = glGetUniformLocation(shdLambert, "modelview");
+    shdLambert_lightpos   = glGetUniformLocation(shdLambert, "lightpos");
+    shdLambert_ambient    = glGetUniformLocation(shdLambert, "ambient");\
+    shdLambert_saturate   = glGetUniformLocation(shdLambert, "saturate");
+    shdLambert_opacity    = glGetUniformLocation(shdLambert, "opacity");
 }
 /// <><><> ///
 void makeAllShaders()
@@ -552,22 +580,24 @@ void makeAllShaders()
     makeLambert();
 }
 /// <><><> ///
-void shadeFullbrightSolid(GLint* position, GLint* projection, GLint* modelview, GLint* color, GLint* opacity)
+void shadeFullbrightSolid(GLint* position, GLint* projection, GLint* modelview, GLint* color, GLint* lightness, GLint* opacity)
 {
     *position = shdFullbrightSolid_position;
     *projection = shdFullbrightSolid_projection;
     *modelview = shdFullbrightSolid_modelview;
     *color = shdFullbrightSolid_color;
     *opacity = shdFullbrightSolid_opacity;
+    *lightness = shdFullbrightSolid_lightness;
     glUseProgram(shdFullbrightSolid);
 }
-void shadeFullbright(GLint* position, GLint* projection, GLint* modelview, GLint* color, GLint* opacity)
+void shadeFullbright(GLint* position, GLint* projection, GLint* modelview, GLint* color, GLint* lightness, GLint* opacity)
 {
     *position = shdFullbright_position;
     *projection = shdFullbright_projection;
     *modelview = shdFullbright_modelview;
     *color = shdFullbright_color;
     *opacity = shdFullbright_opacity;
+    *lightness = shdFullbright_lightness;
     glUseProgram(shdFullbright);
 }
 void shadeLambertSolid(GLint* position, GLint* projection, GLint* modelview, GLint* lightpos, GLint* normal, GLint* color, GLint* ambient, GLint* saturate, GLint* opacity)
