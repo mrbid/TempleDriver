@@ -150,7 +150,6 @@ void main_loop()
 // game logic
 //*************************************
 
-    static uint last_focus_mouse = 0;
     SDL_Event event;
     while(SDL_PollEvent(&event))
     {
