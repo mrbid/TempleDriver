@@ -535,6 +535,8 @@ int main(int argc, char** argv)
     printf("----\n");
     printf("Dedicated to the smartest programmer that ever lived, Terry A. Davis. (https://templeos.org/)\n");
     printf("----\n");
+    printf("Terry A. Davis was a very skilled and devote catholic programmer who sadly suffered from Schizophrenia during his life, although this didn't stop Terry from becoming one of the most famous and recognisable figures of the general internet community gaining recognition from even Larry Page the co-founder of the Google search engine. What Terry managed to achieve is his life is sadly commonly undervalued and overlooked due to his Schizophrenia; however what Terry managed to achieve in his programming ventures and his social media escapades, a small fragment of which considered controversial sadly given more attention than the greater body of his internet streams, truly is a remarkable feat even for an individual without mental health issues. That is to say that no one else to date has achieved the combined programming feats and social notoriety that Terry Davis, single-handedly, managed to achieve during his life. It is with great honour that I am able to write this passage about him.");
+    printf("----\n");
     SDL_version compiled;
     SDL_version linked;
     SDL_VERSION(&compiled);
