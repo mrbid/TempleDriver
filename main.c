@@ -519,7 +519,7 @@ int main(int argc, char** argv)
     printf("----\n");
     printf("Terry's 1st Temple.\n");
     printf("----\n");
-    printf("Terry was living in his Dodge Caravan travelling around the USA at the time of his ascension to the throne, his last known mortal location was: W 1st St, The Dalles, Oregon. By the Tjunction of Bargeway Rd.\n");
+    printf("Terry was living in his 2002 Honda Odyssey travelling around the USA at the time of his ascension to the throne, his last known mortal location was: W 1st St, The Dalles, Oregon. By the Tjunction of Bargeway Rd.\n");
     printf("https://www.google.com/maps/@45.6090711,-121.1957259,3a,75y,257.48h,82.24t/data=!3m6!1e1!3m4!1sEuZ0VE3C7GPl-Fhc1iG06g!2e0!7i13312!8i6656!5m1!1e4?coh=205409&entry=ttu\n");
     printf("----\n");
     printf("One command line argument, msaa 0-16.\n");
